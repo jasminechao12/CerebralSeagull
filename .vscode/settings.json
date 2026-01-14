@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "syscall_thread.h": "c",
+        "unistd.h": "c"
+    }
+}
