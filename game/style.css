@@ -1,0 +1,164 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 900px;
+    width: 100%;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 1.1em;
+}
+
+.game-area {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+#gameCanvas {
+    border: 3px solid #667eea;
+    border-radius: 10px;
+    background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 70%, #8B7355 70%, #8B7355 100%);
+    display: block;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.start-screen, .game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+}
+
+.start-screen h2, .game-over h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.start-screen p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+.connect-btn, .start-btn, .restart-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin: 10px;
+}
+
+.connect-btn:hover, .start-btn:hover, .restart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.connect-btn:active, .start-btn:active, .restart-btn:active {
+    transform: translateY(0);
+}
+
+.status-text {
+    margin-top: 15px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.status-text.connected {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.final-score {
+    font-size: 1.5em;
+    color: #333;
+    margin: 20px 0;
+}
+
+.info-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 10px;
+}
+
+.score-display {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.controls-info {
+    text-align: right;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.controls-info p {
+    margin: 5px 0;
+}
+
+.blink-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #333;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    z-index: 50;
+    transition: background-color 0.1s, box-shadow 0.1s;
+}
+
+.blink-indicator.active {
+    background-color: #00ff00;
+    box-shadow: 0 0 15px #00ff00, 0 0 25px #00ff00;
+}

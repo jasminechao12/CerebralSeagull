@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerebral Seagull - Blink to Fly!</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐦 Cerebral Seagull</h1>
+            <p class="subtitle">Blink to make the seagull fly!</p>
+        </div>
+        
+        <div class="game-area">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div id="blinkIndicator" class="blink-indicator"></div>
+            <div id="gameOverScreen" class="game-over hidden">
+                <h2>Game Over!</h2>
+                <p class="final-score">Final Score: <span id="finalScore">0</span></p>
+                <button id="restartBtn" class="restart-btn">Play Again</button>
+            </div>
+            <div id="startScreen" class="start-screen">
+                <h2>Ready to Play?</h2>
+                <p>Connect your HID joystick and click below to start</p>
+                <button id="connectBtn" class="connect-btn">Connect Joystick</button>
+                <p id="connectionStatus" class="status-text"></p>
+                <button id="startBtn" class="start-btn hidden">Start Game</button>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="score-display">
+                <span>Score: <span id="score">0</span></span>
+            </div>
+            <div class="controls-info">
+                <p>🎮 Use your blink-controlled HID joystick</p>
+                <p>Press any button to make the seagull go up</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
