@@ -15,6 +15,7 @@
 #include <sysusb.h>
 #include <sysblink.h>
 #include <uart.h>
+#include <servok.h>
 #include <printk.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -144,6 +145,14 @@ void svc_c_handler(struct exception_stack_frame* frame) {
 
     case 27:
       frame->R0 = uart_get_byte((char *)frame->R0);
+      break;
+
+    case 28:
+      frame->R0 = (uint32_t) sys_servo_enable((uint8_t)frame->R0, (uint8_t)frame->R1);
+      break;
+      
+    case 29:
+      frame->R0 = (uint32_t) sys_servo_set((uint8_t)frame->R0, (uint8_t)frame->R1);
       break;
 
     default:

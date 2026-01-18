@@ -9,7 +9,7 @@
 
 /** @brief thread user space stack size - 1KB */
 #define USR_STACK_WORDS 512
-#define NUM_THREADS 2
+#define NUM_THREADS 3
 #define NUM_MUTEXES 1
 #define CLOCK_FREQUENCY 1000
 
@@ -17,17 +17,31 @@
 /** @brief Computation time of the task */
 #define THREAD_C0_MS 1
 #define THREAD_C1_MS 1
-// #define THREAD_C2_MS 6
+#define THREAD_C2_MS 1
 
 /** @brief Period of the thread */
 #define THREAD_T0_MS 2
 #define THREAD_T1_MS 10
-// #define THREAD_T2_MS 40
+#define THREAD_T2_MS 20
 
 
 
 volatile float shared_sample = 0;
 volatile bool sample_ready = false;
+
+// Bird position tracking (simulating game physics)
+// Canvas height is 600, bird starts in middle
+#define CANVAS_HEIGHT 600.0f
+#define FALL_SPEED 0.5f  // pixels per frame in game (scaled to our timing) - increased for faster fall
+#define JUMP_STRENGTH -60.0f  // pixels up when blink happens (increased for more servo movement)
+#define THREAD1_PERIOD_MS 10  // thread_1 period in ms
+
+// Virtual bird Y position (0 = top, 600 = bottom)
+volatile float bird_y_position = CANVAS_HEIGHT / 2.0f;  // Start at middle
+
+// Global servo position variable (calculated from bird position)
+// Range: 90 (bottom) to 180 (top)
+volatile uint8_t global_servo_position = 135; // Default to middle
 
 typedef struct __attribute__((packed)) {
     int8_t x;
@@ -64,6 +78,22 @@ void thread_0( UNUSED void *vargp ) {
 
 
 
+// Calculate servo position from bird Y position
+// Maps bird Y (0-600) to servo angle (180 = top, 90 = bottom)
+static uint8_t calculate_servo_position(float bird_y) {
+  // Clamp bird Y to canvas bounds
+  if (bird_y < 0.0f) bird_y = 0.0f;
+  if (bird_y > CANVAS_HEIGHT) bird_y = CANVAS_HEIGHT;
+  
+  // Normalize to 0-1 (0 = top, 1 = bottom)
+  float normalized = bird_y / CANVAS_HEIGHT;
+  
+  // Map to servo range: 180 (top) to 90 (bottom)
+  float servo_pos = 180.0f - (normalized * 90.0f);
+  
+  return (uint8_t)servo_pos;
+}
+
 // UART Reading Thread - reads single byte (0 or 1)
 void thread_1(UNUSED void *vargp) {
   UNUSED mutex_t *eeg_mutex = ( mutex_t * ) vargp;
@@ -72,7 +102,25 @@ void thread_1(UNUSED void *vargp) {
   joy_report_t rpt = {0};
   static bool button_pressed = false;
   
+  // Scale fall speed to match our thread period (game runs at ~60fps = 16.67ms)
+  // Our thread runs at 10ms, so scale accordingly: 0.3 * (10/16.67) ≈ 0.18
+  float scaled_fall_speed = FALL_SPEED * (THREAD1_PERIOD_MS / 16.67f);
+  
   while (1) {
+    // Simulate constant falling
+    bird_y_position += scaled_fall_speed;
+    
+    // Clamp bird position to canvas bounds
+    if (bird_y_position > CANVAS_HEIGHT) {
+      bird_y_position = CANVAS_HEIGHT;
+    }
+    if (bird_y_position < 0.0f) {
+      bird_y_position = 0.0f;
+    }
+    
+    // Update servo position based on current bird position
+    global_servo_position = calculate_servo_position(bird_y_position);
+    
     // If button was pressed in previous iteration, release it now
     if (button_pressed) {
       if (user_tud_hid_ready()) {
@@ -86,8 +134,19 @@ void thread_1(UNUSED void *vargp) {
     if (uart_read(&c) == 0) {
       uint8_t blink_status = (uint8_t)c;
       
-      // If blink detected (status == 1), send HID button press
+      // If blink detected (status == 1), send HID button press AND jump the bird
       if (blink_status == 1 && !button_pressed) {
+        // Jump the bird up by jump strength
+        bird_y_position += JUMP_STRENGTH;
+        
+        // Clamp after jump
+        if (bird_y_position < 0.0f) {
+          bird_y_position = 0.0f;
+        }
+        
+        // Update servo position immediately after jump
+        global_servo_position = calculate_servo_position(bird_y_position);
+        
         if (user_tud_hid_ready()) {
           // Press button
           rpt.buttons = 0x01;
@@ -96,6 +155,18 @@ void thread_1(UNUSED void *vargp) {
         }
       }
     }
+    wait_until_next_period();
+  }
+}
+
+// Servo Thread
+void thread_2(UNUSED void *vargp) {
+  servo_enable(1, 1);
+
+  while (1) {
+    // Use the global servo position based on bird position
+    // Position is updated when blink is detected (via thread_1 or game)
+    servo_set(1, global_servo_position);
     wait_until_next_period();
   }
 }
@@ -162,7 +233,7 @@ int main(UNUSED int argc, UNUSED char const *argv[]){
 
   ABORT_ON_ERROR( thread_create( &thread_1, 1, THREAD_C1_MS, THREAD_T1_MS, ( void * )eeg_mutex ) );
 
-  // ABORT_ON_ERROR( thread_create( &thread_2, 2, THREAD_C2_MS, THREAD_T2_MS, ( void * )eeg_mutex ) );
+  ABORT_ON_ERROR( thread_create( &thread_2, 2, THREAD_C2_MS, THREAD_T2_MS, NULL ) );
 
   printf( "Successfully created threads! Starting scheduler...\n" );
 

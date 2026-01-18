@@ -1,20 +1,15 @@
-/**
- * @file
- *
- * @brief
- *
- * @date
- *
- * @author
- */
-
 #include <unistd.h>
 #include <timer.h>
 #include <rcc.h>
 #include <nvic.h>
+#include <servok.h>
 #include <gpio.h>
 #include <printk.h>
 
+#define RCC_EN (1 << 1)
+#define RCC_UNEN ~RCC_EN
+#define ZERO_EN (1)
+#define ZERO_UNEN ~(ZERO_EN)
 #define UNUSED __attribute__((unused))
 
 /** @brief tim2_5 */
@@ -40,31 +35,31 @@ struct tim2_5 {
 
 struct tim2_5* const timer_base[] = {(void *)0x0,   // N/A - Don't fill out
                                      (void *)0x0,   // N/A - Don't fill out
-                                     (void *)-1,    // TODO: fill out address for TIMER 2
-                                     (void *)-1,    // TODO: fill out address for TIMER 3
-                                     (void *)-1,    // TODO: fill out address for TIMER 4
-                                     (void *)-1};   // TODO: fill out address for TIMER 5
+                                     (void *)0x40000000,  // address for TIMER 2
+                                     (void *)0x40000400,  // address for TIMER 3
+                                     (void *)0x40000800,  // address for TIMER 4
+                                     (void *)0x40000C00}; // address for TIMER 5
 
-
-
-#define RCC_EN (1 << 1)
-#define RCC_UNEN ~RCC_EN
-#define ZERO_EN (1)
-#define ZERO_UNEN ~(ZERO_EN)
-#define UNUSED __attribute__((unused))
 
 
 int timer_ticks = 0;
 
-// TODO: On timer interrupt, sample EEG
 void timer_handler() {
-  // adc_read_chan();
-
-  // sample_eeg();
+  // Channel 1
+  if (timer_ticks <= ticks_high1) {
+    gpio_set(GPIO_A, 10);
+  }
+  else if (timer_ticks > ticks_high1 && timer_ticks < 200) {
+    gpio_clr(GPIO_A, 10);
+  }
+  
+  if (timer_ticks >= 200) {
+    timer_ticks = 0;
+  }
+  timer_ticks++;
 
   timer_clear_interrupt_bit(3);
 }
-
 
 
 void timer_init(int timer, uint32_t prescalar, uint32_t period) {
@@ -84,15 +79,14 @@ void timer_init(int timer, uint32_t prescalar, uint32_t period) {
   timer_base[timer]->egr |= ZERO_EN; // Update Generation
   timer_base[timer]->dier |= ZERO_EN; // Update Interrupt Enable
   timer_base[timer]->cr1 |= ZERO_EN; // Counter Enable
-}
 
+}
 
 // unset enable bit in RCC reg
 void timer_disable(UNUSED int timer) {
   struct rcc_reg_map *rcc = RCC_BASE;
   rcc->apb1_enr &= RCC_UNEN;
 }
-
 
 // clear intript flag bit of the status reg
 void timer_clear_interrupt_bit(int timer) {

@@ -62,4 +62,8 @@
 /* UART Read */
 #define SVC_UART_READ       27
 
+/* Servo Control */
+#define SVC_SERVO_ENABLE    28
+#define SVC_SERVO_SET       29
+
 #endif /* _SVC_NUM_H_ */

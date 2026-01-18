@@ -160,6 +160,18 @@ uart_read:
   bx lr
 
 
+/* Servo Control */
+.global servo_enable
+servo_enable:
+  SVC SVC_SERVO_ENABLE
+  bx lr
+
+.global servo_set
+servo_set:
+  SVC SVC_SERVO_SET
+  bx lr
+
+
 /* The following stubs are not required to be implemented */
 
 .global _start
